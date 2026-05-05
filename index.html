@@ -26,7 +26,6 @@
       overflow: hidden;
     }
 
-    /* Animated background blobs */
     .blob {
       position: fixed;
       border-radius: 50%;
@@ -44,7 +43,6 @@
       to   { transform: translate(40px, 30px) scale(1.08); }
     }
 
-    /* Noise texture overlay */
     body::after {
       content: '';
       position: fixed; inset: 0;
@@ -83,34 +81,23 @@
     }
     h1 span { color: var(--accent); }
 
-    /* Big play button */
-    .play-btn {
+    .play-indicator {
       position: relative;
       width: 140px; height: 140px;
       border-radius: 50%;
-      border: none;
-      cursor: pointer;
       background: var(--accent);
       display: flex; align-items: center; justify-content: center;
       margin: 0 auto 40px;
-      transition: transform 0.15s, box-shadow 0.15s;
+      animation: pulse 1.4s ease-in-out infinite;
       box-shadow: 0 0 0 0 rgba(232,255,71,0.4);
     }
-    .play-btn:hover { transform: scale(1.06); box-shadow: 0 0 40px rgba(232,255,71,0.35); }
-    .play-btn:active { transform: scale(0.97); }
+    .play-indicator svg { width: 52px; height: 52px; fill: #0a0a0f; }
 
-    .play-btn svg { width: 52px; height: 52px; fill: #0a0a0f; transition: transform 0.2s; }
-
-    /* Pulse ring while playing */
-    .play-btn.playing {
-      animation: pulse 1.4s ease-in-out infinite;
-    }
     @keyframes pulse {
       0%, 100% { box-shadow: 0 0 0 0 rgba(232,255,71,0.5); }
       50%       { box-shadow: 0 0 0 22px rgba(232,255,71,0); }
     }
 
-    /* Waveform visualizer */
     .waveform {
       display: flex;
       align-items: center;
@@ -123,11 +110,6 @@
       width: 4px;
       border-radius: 4px;
       background: var(--accent);
-      opacity: 0.25;
-      transition: opacity 0.3s;
-    }
-    .waveform.active .bar {
-      opacity: 1;
       animation: wave 0.8s ease-in-out infinite alternate;
     }
     .bar:nth-child(1)  { height: 14px; animation-delay: 0.0s; }
@@ -147,15 +129,13 @@
       to   { transform: scaleY(1.1); }
     }
 
-    /* Progress bar */
     .progress-wrap {
       position: relative;
       height: 4px;
       background: rgba(255,255,255,0.08);
       border-radius: 4px;
       margin-bottom: 10px;
-      cursor: pointer;
-      overflow: visible;
+      overflow: hidden;
     }
     .progress-fill {
       height: 100%;
@@ -164,17 +144,6 @@
       width: 0%;
       transition: width 0.1s linear;
     }
-    .progress-thumb {
-      position: absolute;
-      right: -6px; top: -4px;
-      width: 12px; height: 12px;
-      background: #fff;
-      border-radius: 50%;
-      box-shadow: 0 0 8px rgba(232,255,71,0.6);
-      opacity: 0;
-      transition: opacity 0.2s;
-    }
-    .progress-wrap:hover .progress-thumb { opacity: 1; }
 
     .time-row {
       display: flex;
@@ -182,34 +151,6 @@
       font-size: 11px;
       color: rgba(255,255,255,0.3);
       font-variant-numeric: tabular-nums;
-      margin-bottom: 28px;
-    }
-
-    /* File input */
-    .file-label {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: rgba(255,255,255,0.4);
-      cursor: pointer;
-      border: 1px dashed rgba(255,255,255,0.15);
-      border-radius: 12px;
-      padding: 10px 20px;
-      transition: border-color 0.2s, color 0.2s;
-    }
-    .file-label:hover { border-color: var(--accent); color: var(--accent); }
-    .file-label svg { width: 16px; height: 16px; fill: currentColor; flex-shrink: 0; }
-    #fileInput { display: none; }
-
-    .filename {
-      font-size: 11px;
-      color: rgba(255,255,255,0.25);
-      margin-top: 10px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100%;
     }
   </style>
 </head>
@@ -223,61 +164,38 @@
   <div class="label">Voice Message</div>
   <h1>Нажми<br/><span>и слушай</span></h1>
 
-  <button class="play-btn" id="playBtn" onclick="togglePlay()">
-    <!-- Play icon -->
-    <svg id="iconPlay" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-    <!-- Pause icon (hidden by default) -->
-    <svg id="iconPause" viewBox="0 0 24 24" style="display:none"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
-  </button>
+  <div class="play-indicator">
+    <svg viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+  </div>
 
-  <div class="waveform" id="waveform">
+  <div class="waveform">
     <div class="bar"></div><div class="bar"></div><div class="bar"></div>
     <div class="bar"></div><div class="bar"></div><div class="bar"></div>
     <div class="bar"></div><div class="bar"></div><div class="bar"></div>
     <div class="bar"></div><div class="bar"></div>
   </div>
 
-  <div class="progress-wrap" id="progressWrap" onclick="seek(event)">
+  <div class="progress-wrap">
     <div class="progress-fill" id="progressFill"></div>
-    <div class="progress-thumb" id="progressThumb"></div>
   </div>
   <div class="time-row">
     <span id="timeElapsed">0:00</span>
     <span id="timeDuration">0:00</span>
   </div>
-
-  <label class="file-label" for="fileInput">
-    <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 14.93V17a1 1 0 0 1-2 0v-.07A8 8 0 0 1 4.07 11H5a1 1 0 0 1 0 2 6 6 0 0 0 6 6zm0-9.86V7a1 1 0 0 1 2 0v.07A8 8 0 0 1 19.93 13H19a1 1 0 0 1 0-2 6 6 0 0 0-6-6z"/></svg>
-    Загрузить .ogg / .mp3
-  </label>
-  <input type="file" id="fileInput" accept=".mp3,.ogg,audio/*" onchange="loadFile(event)"/>
-  <div class="filename" id="filename">или положи audio.mp3 рядом с файлом</div>
 </div>
 
-<audio id="audio" volume="1"></audio>
+<audio id="audio" loop></audio>
 
 <script>
   const audio = document.getElementById('audio');
-  const playBtn = document.getElementById('playBtn');
-  const iconPlay = document.getElementById('iconPlay');
-  const iconPause = document.getElementById('iconPause');
-  const waveform = document.getElementById('waveform');
   const progressFill = document.getElementById('progressFill');
-  const progressThumb = document.getElementById('progressThumb');
   const timeElapsed = document.getElementById('timeElapsed');
   const timeDuration = document.getElementById('timeDuration');
-  const filenameEl = document.getElementById('filename');
-
-  // Громкость на максимум
-  audio.volume = 1.0;
-
-  // Попробовать загрузить audio.mp3 по умолчанию
-  audio.src = 'audio.mp3';
 
   function fmt(s) {
+    if (!isFinite(s)) return '0:00';
     const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return `${m}:${sec.toString().padStart(2,'0')}`;
+    return m + ':' + String(Math.floor(s % 60)).padStart(2, '0');
   }
 
   audio.addEventListener('loadedmetadata', () => {
@@ -288,66 +206,17 @@
     if (!audio.duration) return;
     const pct = (audio.currentTime / audio.duration) * 100;
     progressFill.style.width = pct + '%';
-    progressThumb.style.right = (100 - pct) + '%'; // track thumb position
     timeElapsed.textContent = fmt(audio.currentTime);
   });
 
-  audio.addEventListener('ended', () => {
-    setPlaying(false);
-    progressFill.style.width = '0%';
-    timeElapsed.textContent = '0:00';
-  });
+  audio.volume = 1.0;
+  audio.loop = true;
+  audio.src = 'audio.mp3';
 
-  function setPlaying(state) {
-    if (state) {
-      playBtn.classList.add('playing');
-      waveform.classList.add('active');
-      iconPlay.style.display = 'none';
-      iconPause.style.display = '';
-    } else {
-      playBtn.classList.remove('playing');
-      waveform.classList.remove('active');
-      iconPlay.style.display = '';
-      iconPause.style.display = 'none';
-    }
-  }
-
-  function togglePlay() {
-    if (!audio.src && !audio.currentSrc) return;
-    if (audio.paused) {
-      audio.volume = 1.0;
-      audio.play().then(() => setPlaying(true)).catch(() => {});
-    } else {
-      audio.pause();
-      setPlaying(false);
-    }
-  }
-
-  function seek(e) {
-    if (!audio.duration) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const pct = (e.clientX - rect.left) / rect.width;
-    audio.currentTime = pct * audio.duration;
-  }
-
-  function loadFile(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    const url = URL.createObjectURL(file);
-    audio.src = url;
-    audio.volume = 1.0;
-    filenameEl.textContent = file.name;
-    setPlaying(false);
-    progressFill.style.width = '0%';
-    timeElapsed.textContent = '0:00';
-  }
-
-  // Исправление позиции thumb
-  audio.addEventListener('timeupdate', () => {
-    if (!audio.duration) return;
-    const pct = (audio.currentTime / audio.duration) * 100;
-    progressThumb.style.left = `calc(${pct}% - 6px)`;
-    progressThumb.style.right = 'auto';
+  // Автозапуск. Если браузер заблокировал — запустится после первого клика/нажатия
+  audio.play().catch(() => {
+    document.addEventListener('click', () => audio.play(), { once: true });
+    document.addEventListener('keydown', () => audio.play(), { once: true });
   });
 </script>
 </body>
